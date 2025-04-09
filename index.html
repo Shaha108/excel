@@ -3,180 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jump & Solve</title>
+    <title>Cryptography Interactive Site</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
         body {
             font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #1e3c72, #2a5298);
+            color: white;
             text-align: center;
-            background: linear-gradient(to bottom, #87CEEB, #f0f8ff);
-            overflow: hidden;
+            padding: 20px;
         }
-        canvas {
-            display: block;
-            background: #add8e6;
+        h1, h2 {
+            margin-bottom: 10px;
+        }
+        .container {
+            max-width: 800px;
             margin: auto;
-            border: 2px solid black;
-        }
-        #report {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.8);
-            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
             border-radius: 10px;
-            font-size: 14px;
-            width: 80%;
-            max-width: 500px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
         }
-        #question {
-            position: absolute;
-            bottom: 50px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: white;
+        textarea, input, button {
+            width: 90%;
             padding: 10px;
-            border-radius: 10px;
-            display: none;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+        }
+        textarea {
+            height: 100px;
+        }
+        button {
+            background: #ff9800;
+            color: white;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <div id="report">
-        <strong>Project Report:</strong><br>
-        This project "Jump & Solve" was developed by SHAKHZOD & JONY. The game is inspired by Subway Surfers, 
-        featuring dynamic movements, obstacles, and logical challenges. The project was divided as follows:<br><br>
-        - SHAKHZOD: Game mechanics, character movement, and level design.<br>
-        - JONY: Puzzle system, UI/UX design, and documentation.<br><br>
-        The objective is to jump over obstacles and solve puzzles to proceed. 
-        As levels increase, challenges become harder. This project helped us understand JavaScript game development 
-        and problem-solving techniques.
+    <h1>Cryptography Interactive Site</h1>
+    <p><strong>By SHAKHZOD & JONY</strong></p>
+
+    <div class="container">
+        <h2>Project Report</h2>
+        <p>
+            This website demonstrates six cryptographic algorithms categorized into simple, intermediate, and advanced levels.
+            It includes interactive encryption and decryption functionalities.
+        </p>
+        <p><strong>SHAKHZOD:</strong> Developed the UI and interactivity using JavaScript.</p>
+        <p><strong>JONY:</strong> Implemented cryptographic algorithms and testing.</p>
     </div>
 
-    <canvas id="gameCanvas" width="800" height="400"></canvas>
-    <div id="question">
-        <p id="puzzleText"></p>
-        <input type="text" id="answer">
-        <button onclick="checkAnswer()">Submit</button>
+    <div class="container">
+        <h2>Caesar Cipher</h2>
+        <textarea id="inputText" placeholder="Enter text"></textarea>
+        <input type="number" id="shift" placeholder="Shift (e.g., 3)">
+        <button onclick="encrypt()">Encrypt</button>
+        <button onclick="decrypt()">Decrypt</button>
+        <h3>Result:</h3>
+        <p id="outputText"></p>
     </div>
 
     <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-
-        let player = { x: 50, y: 300, width: 40, height: 40, velocityY: 0, jumping: false };
-        let gravity = 1.5;
-        let obstacles = [{ x: 600, y: 320, width: 50, height: 50 }];
-        let speed = 3;
-        let level = 1;
-        let questionVisible = false;
-
-        function drawPlayer() {
-            ctx.fillStyle = "red";
-            ctx.fillRect(player.x, player.y, player.width, player.height);
-        }
-
-        function drawObstacles() {
-            ctx.fillStyle = "black";
-            obstacles.forEach(obstacle => {
-                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-            });
-        }
-
-        function moveObstacles() {
-            obstacles.forEach(obstacle => {
-                obstacle.x -= speed;
-                if (obstacle.x + obstacle.width < 0) {
-                    obstacle.x = 800 + Math.random() * 200;
-                }
-            });
-        }
-
-        function updatePlayer() {
-            if (player.jumping) {
-                player.velocityY += gravity;
-                player.y += player.velocityY;
-                if (player.y >= 300) {
-                    player.y = 300;
-                    player.jumping = false;
+        function encrypt() {
+            let text = document.getElementById("inputText").value;
+            let shift = parseInt(document.getElementById("shift").value);
+            let result = "";
+            for (let i = 0; i < text.length; i++) {
+                let char = text[i];
+                if (char.match(/[a-z]/i)) {
+                    let code = text.charCodeAt(i);
+                    if (char >= "A" && char <= "Z") {
+                        code = ((code - 65 + shift) % 26) + 65;
+                    } else if (char >= "a" && char <= "z") {
+                        code = ((code - 97 + shift) % 26) + 97;
+                    }
+                    result += String.fromCharCode(code);
+                } else {
+                    result += char;
                 }
             }
+            document.getElementById("outputText").innerText = result;
         }
 
-        function checkCollision() {
-            for (let obstacle of obstacles) {
-                if (player.x < obstacle.x + obstacle.width &&
-                    player.x + player.width > obstacle.x &&
-                    player.y < obstacle.y + obstacle.height &&
-                    player.y + player.height > obstacle.y) {
-                    showPuzzle();
-                    return;
+        function decrypt() {
+            let text = document.getElementById("inputText").value;
+            let shift = parseInt(document.getElementById("shift").value);
+            let result = "";
+            for (let i = 0; i < text.length; i++) {
+                let char = text[i];
+                if (char.match(/[a-z]/i)) {
+                    let code = text.charCodeAt(i);
+                    if (char >= "A" && char <= "Z") {
+                        code = ((code - 65 - shift + 26) % 26) + 65;
+                    } else if (char >= "a" && char <= "z") {
+                        code = ((code - 97 - shift + 26) % 26) + 97;
+                    }
+                    result += String.fromCharCode(code);
+                } else {
+                    result += char;
                 }
             }
+            document.getElementById("outputText").innerText = result;
         }
-
-        function gameLoop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawPlayer();
-            drawObstacles();
-            if (!questionVisible) {
-                moveObstacles();
-                updatePlayer();
-                checkCollision();
-            }
-            requestAnimationFrame(gameLoop);
-        }
-
-        function jump() {
-            if (!player.jumping) {
-                player.velocityY = -20;
-                player.jumping = true;
-            }
-        }
-
-        document.addEventListener("keydown", (event) => {
-            if (event.code === "Space" && !questionVisible) {
-                jump();
-            }
-        });
-
-        function showPuzzle() {
-            questionVisible = true;
-            document.getElementById("question").style.display = "block";
-            let puzzles = [
-                { question: "5 + 3 = ?", answer: "8" },
-                { question: "10 - 4 = ?", answer: "6" },
-                { question: "3 * 3 = ?", answer: "9" },
-                { question: "16 / 4 = ?", answer: "4" }
-            ];
-            let selected = puzzles[Math.floor(Math.random() * puzzles.length)];
-            document.getElementById("puzzleText").innerText = selected.question;
-            document.getElementById("answer").dataset.correct = selected.answer;
-        }
-
-        function checkAnswer() {
-            let userAnswer = document.getElementById("answer").value;
-            let correctAnswer = document.getElementById("answer").dataset.correct;
-            if (userAnswer === correctAnswer) {
-                document.getElementById("question").style.display = "none";
-                questionVisible = false;
-                level++;
-                speed += 0.5;
-                player.x = 50;
-                player.y = 300;
-                obstacles = [{ x: 600, y: 320, width: 50, height: 50 }];
-            } else {
-                alert("Incorrect! Try again.");
-            }
-        }
-
-        gameLoop();
     </script>
 
 </body>
