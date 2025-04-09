@@ -5,170 +5,179 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jump & Solve</title>
     <style>
-        /* === GAME STYLES === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            background-color: #2c3e50;
-            color: white;
+            background: linear-gradient(to bottom, #87CEEB, #f0f8ff);
+            overflow: hidden;
         }
         canvas {
-            border: 2px solid white;
-            background-color: #34495e;
             display: block;
+            background: #add8e6;
             margin: auto;
+            border: 2px solid black;
+        }
+        #report {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 14px;
+            width: 80%;
+            max-width: 500px;
         }
         #question {
-            font-size: 20px;
-            margin-top: 20px;
-        }
-        #answer {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
             padding: 10px;
-            font-size: 18px;
-            text-align: center;
-            width: 100px;
-            margin-top: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 18px;
-            margin-top: 10px;
-            cursor: pointer;
-            background-color: #e74c3c;
-            color: white;
-            border: none;
+            border-radius: 10px;
+            display: none;
         }
     </style>
 </head>
 <body>
 
-    <h1>Jump & Solve</h1>
-    <canvas id="gameCanvas" width="400" height="500"></canvas>
-    <div id="question"></div>
-    <input type="text" id="answer" placeholder="Enter answer">
-    <button onclick="checkAnswer()">Submit</button>
+    <div id="report">
+        <strong>Project Report:</strong><br>
+        This project "Jump & Solve" was developed by SHAKHZOD & JONY. The game is inspired by Subway Surfers, 
+        featuring dynamic movements, obstacles, and logical challenges. The project was divided as follows:<br><br>
+        - SHAKHZOD: Game mechanics, character movement, and level design.<br>
+        - JONY: Puzzle system, UI/UX design, and documentation.<br><br>
+        The objective is to jump over obstacles and solve puzzles to proceed. 
+        As levels increase, challenges become harder. This project helped us understand JavaScript game development 
+        and problem-solving techniques.
+    </div>
+
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <div id="question">
+        <p id="puzzleText"></p>
+        <input type="text" id="answer">
+        <button onclick="checkAnswer()">Submit</button>
+    </div>
 
     <script>
-        /* === GAME VARIABLES === */
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        let player = { x: 180, y: 400, width: 40, height: 40, color: "red", velocityY: 0 };
-        let platforms = [{ x: 100, y: 450, width: 200, height: 10 }];
-        let gravity = 0.5;
-        let jumpPower = -10;
+        let player = { x: 50, y: 300, width: 40, height: 40, velocityY: 0, jumping: false };
+        let gravity = 1.5;
+        let obstacles = [{ x: 600, y: 320, width: 50, height: 50 }];
+        let speed = 3;
         let level = 1;
-        let currentQuestion;
-        let correctAnswer;
-
-        /* === GAME FUNCTIONS === */
-        function generateQuestion() {
-            let num1 = Math.floor(Math.random() * 10) + 1;
-            let num2 = Math.floor(Math.random() * 10) + 1;
-            correctAnswer = num1 + num2;
-            currentQuestion = `Solve: ${num1} + ${num2}`;
-            document.getElementById("question").innerText = currentQuestion;
-        }
-
-        function checkAnswer() {
-            let userAnswer = parseInt(document.getElementById("answer").value);
-            if (userAnswer === correctAnswer) {
-                levelUp();
-            } else {
-                alert("Wrong answer! Try again.");
-            }
-            document.getElementById("answer").value = "";
-        }
-
-        function levelUp() {
-            level++;
-            alert(`Great! Level ${level}`);
-            platforms.push({ x: Math.random() * 300, y: 450 - level * 50, width: 200, height: 10 });
-            generateQuestion();
-        }
+        let questionVisible = false;
 
         function drawPlayer() {
-            ctx.fillStyle = player.color;
+            ctx.fillStyle = "red";
             ctx.fillRect(player.x, player.y, player.width, player.height);
         }
 
-        function drawPlatforms() {
-            ctx.fillStyle = "white";
-            platforms.forEach(p => {
-                ctx.fillRect(p.x, p.y, p.width, p.height);
+        function drawObstacles() {
+            ctx.fillStyle = "black";
+            obstacles.forEach(obstacle => {
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
             });
         }
 
-        function updateGame() {
-            player.velocityY += gravity;
-            player.y += player.velocityY;
-
-            platforms.forEach(p => {
-                if (
-                    player.y + player.height >= p.y &&
-                    player.y + player.height <= p.y + 10 &&
-                    player.x + player.width > p.x &&
-                    player.x < p.x + p.width
-                ) {
-                    player.velocityY = jumpPower;
+        function moveObstacles() {
+            obstacles.forEach(obstacle => {
+                obstacle.x -= speed;
+                if (obstacle.x + obstacle.width < 0) {
+                    obstacle.x = 800 + Math.random() * 200;
                 }
             });
+        }
 
-            if (player.y > canvas.height) {
-                alert("Game Over! Try again.");
-                location.reload();
+        function updatePlayer() {
+            if (player.jumping) {
+                player.velocityY += gravity;
+                player.y += player.velocityY;
+                if (player.y >= 300) {
+                    player.y = 300;
+                    player.jumping = false;
+                }
             }
+        }
 
+        function checkCollision() {
+            for (let obstacle of obstacles) {
+                if (player.x < obstacle.x + obstacle.width &&
+                    player.x + player.width > obstacle.x &&
+                    player.y < obstacle.y + obstacle.height &&
+                    player.y + player.height > obstacle.y) {
+                    showPuzzle();
+                    return;
+                }
+            }
+        }
+
+        function gameLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawPlatforms();
             drawPlayer();
-            requestAnimationFrame(updateGame);
+            drawObstacles();
+            if (!questionVisible) {
+                moveObstacles();
+                updatePlayer();
+                checkCollision();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        function jump() {
+            if (!player.jumping) {
+                player.velocityY = -20;
+                player.jumping = true;
+            }
         }
 
         document.addEventListener("keydown", (event) => {
-            if (event.key === "ArrowLeft" && player.x > 0) {
-                player.x -= 20;
-            }
-            if (event.key === "ArrowRight" && player.x + player.width < canvas.width) {
-                player.x += 20;
+            if (event.code === "Space" && !questionVisible) {
+                jump();
             }
         });
 
-        generateQuestion();
-        updateGame();
+        function showPuzzle() {
+            questionVisible = true;
+            document.getElementById("question").style.display = "block";
+            let puzzles = [
+                { question: "5 + 3 = ?", answer: "8" },
+                { question: "10 - 4 = ?", answer: "6" },
+                { question: "3 * 3 = ?", answer: "9" },
+                { question: "16 / 4 = ?", answer: "4" }
+            ];
+            let selected = puzzles[Math.floor(Math.random() * puzzles.length)];
+            document.getElementById("puzzleText").innerText = selected.question;
+            document.getElementById("answer").dataset.correct = selected.answer;
+        }
+
+        function checkAnswer() {
+            let userAnswer = document.getElementById("answer").value;
+            let correctAnswer = document.getElementById("answer").dataset.correct;
+            if (userAnswer === correctAnswer) {
+                document.getElementById("question").style.display = "none";
+                questionVisible = false;
+                level++;
+                speed += 0.5;
+                player.x = 50;
+                player.y = 300;
+                obstacles = [{ x: 600, y: 320, width: 50, height: 50 }];
+            } else {
+                alert("Incorrect! Try again.");
+            }
+        }
+
+        gameLoop();
     </script>
 
-    <!-- === PROJECT REPORT (Inside Code) === -->
-    <!-- 
-        📄 REPORT: Jump & Solve
-        
-        1. Introduction:
-           This is a level-based game where players solve math puzzles to progress.
-        
-        2. Team Members:
-           - SHAKHZOD: Designed UI, styled the game, documented the project.
-           - JONY: Developed game logic, implemented platforms and puzzles.
-
-        3. Project Implementation:
-           - Player jumps between platforms.
-           - Math problems must be solved to progress.
-           - Each level adds a new platform.
-
-        4. Technologies:
-           - HTML, CSS for UI.
-           - JavaScript for game logic.
-
-        5. Challenges & Solutions:
-           - Platform positioning: Used random placement.
-           - Puzzle generation: Randomized math problems.
-           - Game fairness: Balanced difficulty.
-
-        6. Conclusion:
-           - Learned JavaScript game logic, UI design, and teamwork.
-           - Future: More puzzle types, better graphics, enhanced difficulty.
-
-        ✅ All tasks are completed. The game is ready to be played.
-    -->
-    
 </body>
 </html>
